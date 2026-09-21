@@ -59,6 +59,39 @@ button.audio-example:focus-visible{
   outline-offset:2px;
 }
 
+
+/* v63：基本母音教材卡片／口型版面 */
+.vowel-lesson-intro{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(280px,.8fr);gap:16px;align-items:stretch;margin-top:18px}
+.vowel-lesson-box{background:linear-gradient(135deg,#fff8fb,#fffdfb);border:1px solid #f3d1dc;border-radius:20px;padding:18px}
+.vowel-lesson-box h3{margin:0 0 8px;color:var(--deep)}
+.vowel-tip-list{margin:8px 0 0;padding-left:1.25rem;line-height:1.9;color:#6f5d65}
+.vowel-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:14px}
+.vowel-card{background:linear-gradient(180deg,#fffafd,#fff);border:1px solid #f2cddd;border-radius:20px;padding:16px;min-width:0;box-shadow:0 8px 20px rgba(119,57,78,.06)}
+.vowel-head{display:flex;align-items:center;gap:12px;margin-bottom:4px}
+.vowel-symbol{font-size:3rem;line-height:1;font-weight:900;color:#3d1627}
+.vowel-rom{background:#f7bfd3;color:#3d1627;border-radius:999px;padding:5px 14px;font-weight:900;font-size:1.05rem}
+.vowel-desc{font-weight:800;color:#5f4650;margin:4px 0 10px}
+.vowel-visuals{display:grid;grid-template-columns:1.25fr .75fr;gap:10px;align-items:center}
+.mouth-box,.tongue-box{height:112px;border:1px solid #f4dce4;border-radius:16px;background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.mouth-shape{position:relative;width:112px;height:66px;border-radius:50%;background:linear-gradient(180deg,#e99591,#c95f69);box-shadow:inset 0 -8px 0 rgba(110,28,44,.18),inset 0 5px 0 rgba(255,255,255,.3)}
+.mouth-shape:before{content:"";position:absolute;left:13px;right:13px;top:18px;height:25px;border-radius:50%;background:#fff0ed;box-shadow:inset 0 -8px 0 #f3b1aa}
+.mouth-shape:after{content:"";position:absolute;left:50%;top:28px;width:var(--mouth-w,42px);height:var(--mouth-h,12px);transform:translateX(-50%);border-radius:50%;background:#5b1828}
+.mouth-a{--mouth-w:50px;--mouth-h:14px}
+.mouth-eo{--mouth-w:34px;--mouth-h:13px;transform:scaleY(.9)}
+.mouth-o{--mouth-w:24px;--mouth-h:28px;border-radius:50%}
+.mouth-u{--mouth-w:27px;--mouth-h:34px;border-radius:48% 48% 52% 52%}
+.mouth-eu{--mouth-w:66px;--mouth-h:7px;transform:scaleY(.72)}
+.mouth-i{--mouth-w:58px;--mouth-h:10px;transform:scaleY(.8)}
+.tongue-diagram{position:relative;width:92px;height:70px}
+.tongue-diagram:before{content:"";position:absolute;left:10px;top:18px;width:70px;height:38px;border:2px solid #d9d0d4;border-left:0;border-radius:0 42px 42px 0;background:#f3eeee}
+.tongue-diagram:after{content:"";position:absolute;left:24px;top:38px;width:52px;height:10px;border-radius:50%;background:#e67b9a;transform:rotate(var(--tongue-angle,0deg));transform-origin:left center}
+.tongue-a{--tongue-angle:-4deg}.tongue-eo{--tongue-angle:3deg}.tongue-o{--tongue-angle:9deg}.tongue-u{--tongue-angle:12deg}.tongue-eu{--tongue-angle:-1deg}.tongue-i{--tongue-angle:-8deg}
+.vowel-points{margin:10px 0 0;padding-left:1.15rem;color:#725f68;line-height:1.65;min-height:78px}
+.vowel-example{display:inline-block;margin-top:7px;padding:7px 11px;border-radius:999px;background:#fff0f5;color:#d84f7f;font-weight:800}
+.vowel-audio{margin-top:9px!important}
+@media(max-width:900px){.vowel-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.vowel-lesson-intro{grid-template-columns:1fr}}
+@media(max-width:520px){.vowel-grid{grid-template-columns:1fr}.vowel-visuals{grid-template-columns:1.15fr .85fr}.vowel-card{padding:14px}.vowel-symbol{font-size:2.7rem}.mouth-box,.tongue-box{height:105px}}
+
 .lesson-study{border:2px solid #f3c0d2;background:linear-gradient(180deg,#fff,#fff8fb)}
 .lesson-study h2{margin-top:6px}.lesson-study .example{height:100%}
 @media(max-width:800px){.lesson-study .grid3{grid-template-columns:1fr}}
@@ -487,14 +520,45 @@ function dialogueLineHTML(x){
  const m=x.match(/^([^：:]+[：:])(.*)$/); const text=(m?m[2]:x).trim(); const zh=DIALOG_ZH[text]||'';
  return `<div style="margin:7px 0"><div>${x}</div>${zh?`<div class="translation" style="margin-top:3px">${zh}</div>`:''}${lessonAudio(text)}</div>`;
 }
+function vowelMouthCard(v,rom,desc,points,example,cls){
+ return `<article class="vowel-card">
+   <div class="vowel-head"><div class="vowel-symbol">${v}</div><span class="vowel-rom">${rom}</span></div>
+   <div class="vowel-desc">${desc}</div>
+   <div class="vowel-visuals">
+    <div class="mouth-box"><div class="mouth-shape mouth-${cls}" aria-label="${v} 口型示意"></div></div>
+    <div class="tongue-box"><div class="tongue-diagram tongue-${cls}" aria-hidden="true"></div></div>
+   </div>
+   <ul class="vowel-points">${points.map(x=>`<li>${x}</li>`).join('')}</ul>
+   <div class="vowel-example">例：${example}</div>
+   ${lessonAudio(v)}
+ </article>`;
+}
+function renderVowelLesson(L){
+ const cards=[
+  vowelMouthCard('ㅏ','a','開口的短音',['嘴巴比較張開','舌位偏低','發音短、清晰'],'가（ㄱ＋ㅏ）','a'),
+  vowelMouthCard('ㅓ','eo','較開的短音',['嘴形較自然','舌位較後','不要念成英文 eo'],'어（ㅇ＋ㅓ）','eo'),
+  vowelMouthCard('ㅗ','o','圓唇音',['嘴唇圓','舌位較後','發音短'],'오（ㅇ＋ㅗ）','o'),
+  vowelMouthCard('ㅜ','u','圓唇・較突出',['嘴唇圓、較突出','舌位較後','比 ㅗ 更突出一點'],'우（ㅇ＋ㅜ）','u'),
+  vowelMouthCard('ㅡ','eu','圓唇扁平',['嘴唇扁平','舌位較前','發音較長一點'],'으（ㅇ＋ㅡ）','eu'),
+  vowelMouthCard('ㅣ','i','圓唇・兩側張開',['嘴唇兩側張開','舌頭靠前','發音較長'],'이（ㅇ＋ㅣ）','i')
+ ].join('');
+ return `<div class="vowel-lesson-intro">
+   <div class="vowel-lesson-box"><h3>📖 1. 基本母音</h3><div>韓語有 6 個基本母音：<b>ㅏ ㅓ ㅗ ㅜ ㅡ ㅣ</b>。這些母音是構成韓文字的基礎。請先看口型，再聽聲音，不要只背羅馬字。</div></div>
+   <div class="vowel-lesson-box"><h3>💡 小提醒：</h3><ul class="vowel-tip-list"><li>羅馬字只是幫助記憶的提示，不是真正發音。</li><li><b>ㅓ = eo</b> 只是拼寫提示，不是英文的「eo」音。</li><li>口型是輔助線索，最後以韓語實際聲音為準。</li></ul></div>
+  </div>
+  <h3 style="margin-top:22px">🍓 母音發音與口型</h3>
+  <div class="vowel-grid">${cards}</div>`;
+}
 function openLesson(n){
  const L=LESSONS[n-1];
  if(!L)return;
+ const special=n===1 ? renderVowelLesson(L) : '';
  document.getElementById('lessonStudy').innerHTML=`<div class="card lesson-study"><div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap"><div><div class="eyebrow">LESSON ${String(n).padStart(2,'0')} · 真正學習內容</div><h2 style="margin:6px 0">${L.title}</h2><p><b>學習目標：</b>${L.goal}</p></div><button class="btn ghost" onclick="closeLesson()">關閉課程</button></div>
- <div class="notice"><b>📚 本課講解</b><br>${L.note}</div>
+ ${special}
+ ${n!==1?`<div class="notice"><b>📚 本課講解</b><br>${L.note}</div>`:''}
  ${n===18?`<div class="card" style="margin-top:18px;background:linear-gradient(135deg,#fff7fa,#fffdf8);border-color:#f3c5d5"><h3 style="margin-top:0">🗺️ 18 課總整理地圖</h3><p style="line-height:1.8;margin-bottom:14px">這一課把前面 1～17 課的內容重新「接起來」。不是把所有內容再背一次，而是學會看到情境時快速找到正確的語言工具。</p><div class="grid grid3"><div class="example"><b>① 文字與發音</b><br>40 音 → 音節方塊 → 받침 → 常見發音變化</div><div class="example"><b>② 句子骨架</b><br>저는 ___예요／이에요<br>___을/를 해요<br>___에 가요<br>___에서 해요</div><div class="example"><b>③ 數字系統</b><br>固有數詞：하나～열<br>漢字數詞：일～십<br>십／백／천／만</div><div class="example"><b>④ 時間日期</b><br>세 시 → 십 분 → 10월 3일 → 2026년 → 무슨 요일</div><div class="example"><b>⑤ 生活會話</b><br>自我介紹 → 點餐 → 購物 → 交通問路 → 求助</div><div class="example"><b>⑥ 禮貌與語氣</b><br>해요 體先用熟<br>감사합니다／죄송합니다／괜찮아요</div></div></div>`:''}
- <h3 style="margin-top:18px">🧠 本課必學單字／句型</h3><div class="grid grid3">${(LESSON_EXTRA[n-1]?.v||[]).map(x=>`<div class="example"><div class="ko">${x[0]}</div><div>${x[1]}</div>${lessonAudio(x[0])}</div>`).join('')}</div>
- ${(L.examples||[]).filter(x=>!(LESSON_EXTRA[n-1]?.v||[]).some(v=>v[0]===x[0])).length ? `<h3 style="margin-top:18px">🔊 核心例句／單字</h3><div class="grid grid3">${(L.examples||[]).filter(x=>!(LESSON_EXTRA[n-1]?.v||[]).some(v=>v[0]===x[0])).map(x=>`<div class="example"><div class="ko">${x[0]}</div><div>${x[1]}</div><small>${x[2]}</small>${lessonAudio(x[0])}</div>`).join('')}</div>` : ''}
+ ${n===1?'':`<h3 style="margin-top:18px">🧠 本課必學單字／句型</h3><div class="grid grid3">${(LESSON_EXTRA[n-1]?.v||[]).map(x=>`<div class="example"><div class="ko">${x[0]}</div><div>${x[1]}</div>${lessonAudio(x[0])}</div>`).join('')}</div>`}
+ ${n!==1 && (L.examples||[]).filter(x=>!(LESSON_EXTRA[n-1]?.v||[]).some(v=>v[0]===x[0])).length ? `<h3 style="margin-top:18px">🔊 核心例句／單字</h3><div class="grid grid3">${(L.examples||[]).filter(x=>!(LESSON_EXTRA[n-1]?.v||[]).some(v=>v[0]===x[0])).map(x=>`<div class="example"><div class="ko">${x[0]}</div><div>${x[1]}</div><small>${x[2]}</small>${lessonAudio(x[0])}</div>`).join('')}</div>` : ''}
  <h3 style="margin-top:18px">🪜 學習步驟</h3><div class="card" style="box-shadow:none"><ol style="line-height:2">${(LESSON_EXTRA[n-1]?.d||[]).map(x=>`<li>${x}</li>`).join('')}</ol></div>
  <h3 style="margin-top:18px">🗣️ 情境對話</h3><div class="example">${(LESSON_EXTRA[n-1]?.dialog||[]).map(dialogueLineHTML).join('')}</div>
  <h3 style="margin-top:18px">📝 課末檢查</h3><p>本課有幾題小練習，答錯可以重做。測驗是用來幫你檢查學習，不會卡住後面的課程。</p><div id="lessonQuiz"></div></div>`;
