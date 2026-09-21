@@ -1508,8 +1508,38 @@ function answer(i){
   const optionReview=q[1].map((opt,j)=>{const mark=j===q[2]?'✓':'✗';const cls=j===q[2]?'correct':'wrong';const chosen=j===i?'（你選的）':'';const isKorean=/[가-힣]/.test(opt);const paired=isKorean?quizOptionChinese(opt):quizOptionKorean(opt);const label=isKorean?'中文意思':'韓語對應';const meaning=j===q[2]?`${label}：「${paired}」，符合本題要問的內容。`:`${label}：「${paired}」，但和題目要問的內容不符合。`;return `<div class="option-explain ${cls}"><b>${mark} 選項 ${j+1}</b> ${chosen}<br>${opt}<br><small>${meaning}</small></div>`;}).join('');
   document.getElementById('qFeedback').innerHTML=`<div class="feedback ${ok?'ok':'bad'}">${ok?'答對了！✨':'答錯了～'} ${q[3]}</div><div class="card" style="margin-top:10px;box-shadow:none"><b>選項解析</b><div style="margin-top:8px">${optionReview}</div></div><button class="btn" style="margin-top:10px" onclick="quizIndex++;renderQuestion()">下一題 →</button>`;
 }
-let recorder=null,chunks=[];
-async function record(){let status=document.getElementById('recordStatus'),btn=document.getElementById('recordBtn');if(recorder&&recorder.state==='recording'){recorder.stop();return}if(!navigator.mediaDevices?.getUserMedia||!window.MediaRecorder){status.textContent='此瀏覽器不支援錄音，請使用新版 Chrome / Edge。';return}try{let stream=await navigator.mediaDevices.getUserMedia({audio:true});chunks=[];recorder=new MediaRecorder(stream);recorder.ondataavailable=e=>{if(e.data.size)chunks.push(e.data)};recorder.onstop=()=>{stream.getTracks().forEach(t=>t.stop());let blob=new Blob(chunks,{type:'audio/webm'});let url=URL.createObjectURL(blob);document.getElementById('recordPlayer').innerHTML=`<audio controls src="${url}" style="width:100%"></audio>`;status.textContent='錄音完成！按下方播放器回放自己的聲音。';btn.textContent='🎙️ 重新錄音'};recorder.start();btn.textContent='⏹️ 停止錄音';status.textContent='錄音中…請說：'+(document.getElementById('shadowSentence')?.textContent||'나는 밥을 먹어요.')}catch(e){status.textContent='沒有取得麥克風權限。請在瀏覽器允許麥克風後重試。'}}
+let recorder=null,chunks=[],recordUrl=null,recordMime='';
+async function record(){
+  const status=document.getElementById('recordStatus'),btn=document.getElementById('recordBtn'),player=document.getElementById('recordPlayer');
+  if(recorder&&recorder.state==='recording'){recorder.stop();return}
+  if(!navigator.mediaDevices?.getUserMedia||!window.MediaRecorder){status.textContent='此瀏覽器不支援錄音。請用 Safari／Chrome 最新版本並允許麥克風。';return}
+  try{
+    const stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}});
+    chunks=[];
+    const mimeCandidates=['audio/mp4','audio/mp4;codecs=mp4a.40.2','audio/webm;codecs=opus','audio/webm'];
+    recordMime=mimeCandidates.find(m=>MediaRecorder.isTypeSupported?.(m))||'';
+    recorder=recordMime?new MediaRecorder(stream,{mimeType:recordMime}):new MediaRecorder(stream);
+    recorder.ondataavailable=e=>{if(e.data&&e.data.size)chunks.push(e.data)};
+    recorder.onerror=()=>{stream.getTracks().forEach(t=>t.stop());status.textContent='錄音發生錯誤，請再試一次。';btn.textContent='🎙️ 重新錄音'};
+    recorder.onstop=()=>{
+      stream.getTracks().forEach(t=>t.stop());
+      const actualType=recorder.mimeType||recordMime||'audio/mp4';
+      const blob=new Blob(chunks,{type:actualType});
+      if(recordUrl)URL.revokeObjectURL(recordUrl);
+      recordUrl=URL.createObjectURL(blob);
+      player.innerHTML=`<audio controls playsinline preload="metadata" src="${recordUrl}" style="width:100%"></audio>`;
+      const audio=player.querySelector('audio');
+      audio.addEventListener('error',()=>{status.textContent='錄音已完成，但手機瀏覽器無法回放這個音檔。請再錄一次，或改用 Safari／Chrome 最新版本。';});
+      status.textContent='錄音完成！按下方播放器回放自己的聲音。';
+      btn.textContent='🎙️ 重新錄音';
+    };
+    recorder.start();
+    btn.textContent='⏹️ 停止錄音';
+    status.textContent='錄音中…請說：'+(document.getElementById('shadowSentence')?.textContent||'나는 밥을 먹어요.');
+  }catch(e){
+    status.textContent=e&&e.name==='NotAllowedError'?'沒有取得麥克風權限。請在瀏覽器設定中允許此網站使用麥克風。':'無法開始錄音，請確認手機麥克風可用後重試。';
+  }
+}
 document.querySelectorAll('.nav button').forEach(b=>b.onclick=()=>go(b.dataset.page));
 document.getElementById('hamb').onclick=()=>document.getElementById('header').classList.toggle('open');
 document.getElementById('listenBtn').onclick=()=>speak(document.getElementById('shadowSentence')?.textContent||'나는 밥을 먹어요.');
