@@ -19,7 +19,9 @@ h2{margin:32px 0 14px;font-size:1.45rem}h3{margin:7px 0}.grid{display:grid;gap:1
 .choice{display:block;width:100%;text-align:left;border:1px solid var(--line);background:#fff;border-radius:13px;padding:12px;margin:8px 0}.choice:hover{border-color:var(--pink);background:#fff7fa}.choice.selected{border-color:var(--pink);background:#fff0f5;box-shadow:0 0 0 2px #ffd8e5}.choice.correct{background:#eaf7f0;border-color:#8cc6a5}.choice.wrong{background:#fff0f0;border-color:#e8a3a3}
 .feedback{padding:12px;border-radius:12px;margin-top:10px;font-weight:800}.ok{background:#eaf7f0;color:#347553}.bad{background:#fff0f0;color:#a64a4a}
 .search{width:100%;border:1px solid var(--line);background:#fff;border-radius:14px;padding:13px 15px;outline:none}.search:focus{border-color:var(--pink);box-shadow:0 0 0 3px #ffe1eb}.dict{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.dict-item{background:#fff;border:1px solid var(--line);border-radius:17px;padding:16px}.tag{font-size:.75rem;color:var(--pink);font-weight:900}.dict-word{font-size:1.35rem;font-weight:900}.speaker{border:0;background:#fff0f5;border-radius:50%;width:36px;height:36px}.dict-head{display:flex;justify-content:space-between;align-items:center}
-.record{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.status{color:#806b74;min-height:1.5em}.score{font-size:2rem;color:var(--pink);font-weight:900}.notice{background:#f7f4ff;border:1px solid #ddd5f4;border-radius:14px;padding:14px;line-height:1.7}
+.record{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.status{color:#806b74;min-height:1.5em}
+#recordPlayer{width:100%;overflow:hidden}
+#recordPlayer audio{display:block;width:100%;max-width:100%}.score{font-size:2rem;color:var(--pink);font-weight:900}.notice{background:#f7f4ff;border:1px solid #ddd5f4;border-radius:14px;padding:14px;line-height:1.7}
 .footer{text-align:center;color:#9b858d;padding:30px 0}
 @media(max-width:800px){.nav{display:none}.hamb{display:block;margin-left:auto}.header.open .nav{display:flex;position:absolute;top:64px;left:0;right:0;background:#fff9fb;border-bottom:1px solid var(--line);padding:10px;flex-direction:column}.stats,.grid3,.dict{grid-template-columns:1fr}.grid4{grid-template-columns:repeat(2,1fr)}.alphabet-grid{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:480px){.alphabet-grid{grid-template-columns:repeat(2,1fr)}main{padding:18px 13px 50px}.hero{padding:21px}.header{padding:12px 14px}}
@@ -350,14 +352,9 @@ button.audio-example:focus-visible{
 
 <section id="advanced" class="section">
  <div class="hero">
-  <div class="eyebrow">TOPIK I · PRACTICE FROM YOUR DATA</div>
+  <div class="eyebrow">TOPIK I · PRACTICE</div>
   <h1>韓檢初級實戰專區 🏆</h1>
-  <p>題目、選項、答案、解析與題目圖片，全部以你提供的資料表為來源。資料缺失、內容異常或無法確認的題目不會放進網站。</p>
- </div>
- <div class="notice" style="margin-top:14px">
-  <b>資料來源規則：</b>這一區只使用你這次提供的「TOPIK 初級閱讀題目與解析資料表」與「TOPIK 初級聽力考題整理表」。
-  <br>📖 閱讀題目會保留資料表中的題目圖檔；🎧 聽力題會先提供「🔊 播放」，逐字稿在送出答案後才會顯示於解析區。
-  <br>⚠️ 原資料缺題、逐字稿不完整、答案與題目明顯不一致，或內容看起來異常的項目會直接排除。
+  <p>閱讀與聽力題目，依韓檢初級實戰方式練習，完成作答後查看答案與解析。</p>
  </div>
  <div class="tabs" id="advancedModeTabs" style="margin-top:16px"></div>
  <div class="advanced-toolbar">
@@ -1509,7 +1506,41 @@ function answer(i){
   document.getElementById('qFeedback').innerHTML=`<div class="feedback ${ok?'ok':'bad'}">${ok?'答對了！✨':'答錯了～'} ${q[3]}</div><div class="card" style="margin-top:10px;box-shadow:none"><b>選項解析</b><div style="margin-top:8px">${optionReview}</div></div><button class="btn" style="margin-top:10px" onclick="quizIndex++;renderQuestion()">下一題 →</button>`;
 }
 let recorder=null,chunks=[];
-async function record(){let status=document.getElementById('recordStatus'),btn=document.getElementById('recordBtn');if(recorder&&recorder.state==='recording'){recorder.stop();return}if(!navigator.mediaDevices?.getUserMedia||!window.MediaRecorder){status.textContent='此瀏覽器不支援錄音，請使用新版 Chrome / Edge。';return}try{let stream=await navigator.mediaDevices.getUserMedia({audio:true});chunks=[];recorder=new MediaRecorder(stream);recorder.ondataavailable=e=>{if(e.data.size)chunks.push(e.data)};recorder.onstop=()=>{stream.getTracks().forEach(t=>t.stop());let blob=new Blob(chunks,{type:'audio/webm'});let url=URL.createObjectURL(blob);document.getElementById('recordPlayer').innerHTML=`<audio controls src="${url}" style="width:100%"></audio>`;status.textContent='錄音完成！按下方播放器回放自己的聲音。';btn.textContent='🎙️ 重新錄音'};recorder.start();btn.textContent='⏹️ 停止錄音';status.textContent='錄音中…請說：'+(document.getElementById('shadowSentence')?.textContent||'나는 밥을 먹어요.')}catch(e){status.textContent='沒有取得麥克風權限。請在瀏覽器允許麥克風後重試。'}}
+async function record(){
+  const status=document.getElementById('recordStatus'),btn=document.getElementById('recordBtn');
+  if(recorder&&recorder.state==='recording'){recorder.stop();return}
+  if(!navigator.mediaDevices?.getUserMedia||!window.MediaRecorder){status.textContent='此瀏覽器不支援錄音，請改用支援錄音功能的瀏覽器。';return}
+  try{
+    const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+    chunks=[];
+    const mimeCandidates=['audio/mp4','audio/mp4;codecs=mp4a.40.2','audio/webm;codecs=opus','audio/webm'];
+    const mimeType=mimeCandidates.find(t=>MediaRecorder.isTypeSupported?.(t))||'';
+    recorder=mimeType?new MediaRecorder(stream,{mimeType}):new MediaRecorder(stream);
+    recorder.ondataavailable=e=>{if(e.data&&e.data.size)chunks.push(e.data)};
+    recorder.onstop=()=>{
+      stream.getTracks().forEach(t=>t.stop());
+      const actualType=recorder.mimeType||chunks[0]?.type||'audio/mp4';
+      const blob=new Blob(chunks,{type:actualType});
+      const url=URL.createObjectURL(blob);
+      const player=document.createElement('audio');
+      player.controls=true;
+      player.setAttribute('playsinline','');
+      player.preload='metadata';
+      player.src=url;
+      player.style.width='100%';
+      player.style.maxWidth='100%';
+      const wrap=document.getElementById('recordPlayer');
+      wrap.replaceChildren(player);
+      status.textContent='錄音完成！按下方播放器回放自己的聲音。';
+      btn.textContent='🎙️ 重新錄音';
+    };
+    recorder.start();
+    btn.textContent='⏹️ 停止錄音';
+    status.textContent='錄音中…請說：'+(document.getElementById('shadowSentence')?.textContent||'나는 밥을 먹어요.');
+  }catch(e){
+    status.textContent='沒有取得麥克風權限。請在瀏覽器允許麥克風後重試。';
+  }
+}
 document.querySelectorAll('.nav button').forEach(b=>b.onclick=()=>go(b.dataset.page));
 document.getElementById('hamb').onclick=()=>document.getElementById('header').classList.toggle('open');
 document.getElementById('listenBtn').onclick=()=>speak(document.getElementById('shadowSentence')?.textContent||'나는 밥을 먹어요.');
@@ -1854,7 +1885,7 @@ function renderAdvancedCard(x,i,opts={}){
       ${showBack?`<button class="advanced-back-btn" type="button" onclick="backToPreviousAdvanced()">↩ 返回上一題</button>`:''}
       ${random?`<button class="btn secondary advanced-next-btn" type="button" onclick="randomNextAdvanced()" style="display:${showNext?'inline-flex':'none'}">🎲 抽取下一題</button>`:''}
       <div class="advanced-source-answer" hidden style="margin-top:10px">
-        <b>資料表答案：</b>${escapeHtml(x.answer)}<br><br>
+        <b>正確答案：</b>${escapeHtml(x.answer)}<br><br>
         <b>答案解析：</b>${escapeHtml(x.explanation)}
         ${ADVANCED_MODE==='聽力' ? `<div class="advanced-transcript advanced-transcript-after" style="margin-top:14px"><div class="advanced-label">📄 聽力逐字稿</div><div class="transcript-text">${escapeHtml(x.transcript)}</div></div>` : ''}
       </div>
@@ -1870,7 +1901,7 @@ function renderAdvanced(){
   document.getElementById('advancedStats').textContent=
     `目前顯示 ${data.length} 題｜閱讀 ${TOPIK_READING_DATA.length} 題・聽力 ${TOPIK_LISTENING_DATA.length} 題｜合計 ${total} 題`;
   if(!data.length){
-    grid.innerHTML='<div class="advanced-empty"><b>目前沒有符合條件的題目。</b><br><br>這份資料表中缺失或異常的內容已先排除，不會用猜的補進網站。</div>';
+    grid.innerHTML='<div class="advanced-empty"><b>目前沒有符合條件的題目。</b></div>';
     return;
   }
   grid.innerHTML=data.map((x,i)=>renderAdvancedCard(x,i)).join('');
